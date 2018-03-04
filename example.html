@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css"  href="main.css">
+        <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+        
+        <style>
+            * {
+                font-family: 'Quicksand', sans-serif;
+            }
+
+            h1 {
+                margin-bottom: 60px;
+            }
+
+            input {
+                font-size: 24px;
+                width: 20vw;
+                height: 30px;   
+            }
+
+            main {
+                text-align: center;
+            }
+            .hidden {
+                vertical-align: bottom;
+                visibility: hidden;
+            }
+            .visible {
+                vertical-align: bottom;
+                visibility: visible;
+            }
+            .example {
+                margin-bottom: 65px;
+            }
+            span {
+                font-size: 1.5em;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1> Fibrilite Example </h1>
+
+            <section class="example">
+                <h2>Synchronous Processing</h3> 
+                <input id="syncUserInput"></input>
+                <br><br>
+                <div>
+                    <span id="syncUserMessage"> 
+                        0 bytes in user input
+                    </span>
+                </div>
+            </section>
+
+            <section class="example">
+                <h2>requestIdleCallback</h3> 
+                <input id="rICUserInput"></input>
+                <br><br>
+                <div>
+                    <span id="rICUserMessage"> 
+                        0 bytes in user input
+                    </span>
+                </div>
+            </section>
+ 
+            <section class="example">
+                <h2>Fibrilite</h3> 
+                <h4> Refresh the page to clear off remaining requestIdleCallbacks </h4>
+                <input id="userInput"></input>
+                <br><br>
+                <div>
+                    <span id="userMessage"> 
+                        0 bytes in user input
+                    </span>
+                </div>
+            </section>
+
+        </main>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+        <script src="./dist/fibrilite.umd.js"></script>
+        <script src="./example.js"></script>
+    </body>
+</html>

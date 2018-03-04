@@ -1,0 +1,24 @@
+{
+  "name": "fibrilite",
+  "version": "1.0.0",
+  "description": "",
+  "source": "fibrilite.js",
+  "main": "dist/fibrilite.js",
+  "module": "dist/fibrilite.m.js",
+  "scripts": {
+    "build": "microbundle"
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-developit",
+    "rules": {
+      "prefer-spread": 0,
+      "prefer-rest-params": 0
+    }
+  },
+  "devDependencies": {
+    "eslint": "^4.16.0",
+    "microbundle": "^0.4.3"
+  },
+  "author": "James Milner",
+  "license": "MIT"
+}
