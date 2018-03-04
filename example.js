@@ -61,9 +61,9 @@ const rICExample = () => {
         })
         
         requestAnimationFrame(() => {
-            if (timestamp.getTime() === rICLatest.getTime()) {
-                rICMessage.innerHTML = rICBytes + " bytes in user input"
-            }
+            
+            rICMessage.innerHTML = rICBytes + " bytes in user input"
+
         });
 
     });
@@ -73,7 +73,7 @@ rICExample();
 
 const fibreliteExample = () => {
 
-    const fibril = new fibrelite(dataProcessingAsync);
+    const fibril = new fibrelite(dataProcessingAsync, 10);
     const getStringBytes = fibril.prioritiseExecute; // fibril.prioritiseExecute;
     const input = document.getElementById("userInput");
     const message = document.getElementById("userMessage");
@@ -88,9 +88,9 @@ const fibreliteExample = () => {
         bytes = await getStringBytes(event.target.value);
         
         requestAnimationFrame(() => {
-            if (timestamp.getTime() === latest.getTime()) {
-                message.innerHTML = bytes + " bytes in user input"
-            }
+            //if (timestamp.getTime() === latest.getTime()) {
+            message.innerHTML = bytes + " bytes in user input"
+            //}
         });
 
     });
