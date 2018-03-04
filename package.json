@@ -1,10 +1,10 @@
 {
-  "name": "fibrilite",
+  "name": "fibrelite",
   "version": "1.0.0",
   "description": "",
-  "source": "fibrilite.js",
-  "main": "dist/fibrilite.js",
-  "module": "dist/fibrilite.m.js",
+  "source": "fibrelite.js",
+  "main": "dist/fibrelite.js",
+  "module": "dist/fibrelite.m.js",
   "scripts": {
     "build": "microbundle"
   },
