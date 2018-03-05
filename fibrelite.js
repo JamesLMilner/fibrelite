@@ -115,21 +115,26 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
                 setTimeout(() => {
 
                     if (this.latestValue === value || this.lastExecution === undefined) {
-                        //console.log("latestValue - calling fn", this.latestValue);
+
                         this.lastExecution = this.execute(value).then((result) => {
-                            //console.log(result);
+                            // When we have a known result set it to
+                            // the resolved value
                             this.lastKnownResult = result;
                             return result;
                         });
 
+                        // Resolve the new latest value function
                         resolve(this.lastExecution);
+
                     }
 
+                    // If we have an intermittent known result, resolve that
                     if (this.lastKnownResult !== undefined) {
                         resolve(Promise.resolve(this.lastKnownResult));
                     } 
 
-                    
+                    // Else lets just resolve to the currently executing
+                    // function
                     resolve(this.lastExecution);
 
                 },  
