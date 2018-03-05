@@ -73,8 +73,8 @@ rICExample();
 
 const fibreliteExample = () => {
 
-    const fibril = new fibrelite(dataProcessingAsync, 10);
-    const getStringBytes = fibril.prioritiseExecute; // fibril.prioritiseExecute;
+    const fibril = new fibrelite(dataProcessingAsync);
+    const getStringBytes = fibril.waitExecute; // fibril.prioritiseExecute;
     const input = document.getElementById("userInput");
     const message = document.getElementById("userMessage");
     let latest;
@@ -88,9 +88,7 @@ const fibreliteExample = () => {
         bytes = await getStringBytes(event.target.value);
         
         requestAnimationFrame(() => {
-            //if (timestamp.getTime() === latest.getTime()) {
             message.innerHTML = bytes + " bytes in user input"
-            //}
         });
 
     });

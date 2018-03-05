@@ -1,43 +1,48 @@
-export default function fibrelite(asyncFunction, maxThreads) {
+export default function fibrelite(asyncFunction, totalThreads) {
 
     const pool = [];
-    this.maxThreads = maxThreads || 1;
-    this.id = 0;
+    this.roundRobin = 0;
+    this.totalThreads = totalThreads || 1;
+
+    // More than 20 web workers will crash most browsers
+    if (this.totalThreads > 20) {
+        this.totalThreads = 20;
+    }
+
+    // getThread is entirely based on Jason Millers Greenlet 
+    // https://github.com/developit/greenlet
 
     /** Move an async function into its own thread.
      *  @param {Function} asyncFunction  An (async) function to run in a Worker.
      *  @public
      */
-    const greenlet = (asyncFunction) => {
+    const getThread = (asyncFunction) => {
 
-        const parent = this;
+        if (!this.cachedObjectUrl) {
 
-        if (!this.cachedFn) {
-            this.cachedFn = 
-            // Register our wrapper function as the message handler
-            'onmessage=(' + (
-                // userFunc() is the user-supplied async function
-                userFunc => e => {
-                    // Invoking within then() captures exceptions in userFunc() as rejections
-                    Promise.resolve(e.data[1]).then(
-                        userFunc.apply.bind(userFunc, userFunc)
-                    ).then(
-                        // success handler - callback(id, SUCCESS(0), result)
-                        d => { postMessage([e.data[0], 0, d]);},
-                        // error handler - callback(id, ERROR(1), error)
-                        e => { postMessage([e.data[0], 1, ''+e]); }
-                    )
-                }
-            ) + ')(' + asyncFunction + ')'  // pass user-supplied function to the closure
+            // The URL is a pointer to a stringified function (as a blob object)
+            this.cachedObjectUrl = URL.createObjectURL(new Blob([
+                // Register our wrapper function as the message handler
+                'onmessage=(' + (
+                    // userFunc() is the user-supplied async function
+                    userFunc => e => {
+                        // Invoking within then() captures exceptions in userFunc() as rejections
+                        Promise.resolve(e.data[1]).then(
+                            userFunc.apply.bind(userFunc, userFunc)
+                        ).then(
+                            // success handler - callback(id, SUCCESS(0), result)
+                            d => { postMessage([e.data[0], 0, d]);},
+                            // error handler - callback(id, ERROR(1), error)
+                            e => { postMessage([e.data[0], 1, ''+e]); }
+                        );
+                    }
+                ) + ')(' + asyncFunction + ')'  // pass user-supplied function to the closure
+            ]))
+            
         }
 
         // Create an "inline" worker (1:1 at definition time)
-        let worker = new Worker(
-                // The URL is a pointer to a stringified function (as a blob object)
-                URL.createObjectURL(
-                    new Blob([this.cachedFn])
-                )
-            ),
+        let worker = new Worker(this.cachedObjectUrl),
 
             // A simple counter is used to generate worker-global unique ID's for RPC:
             currentId = 0,
@@ -45,8 +50,7 @@ export default function fibrelite(asyncFunction, maxThreads) {
             // Outward-facing promises store their "controllers" (`[request, reject]`) here:
             promises = {};
 
-        worker.resolved = false;
-        
+
         /** Handle RPC results/errors coming back out of the worker.
          *  Messages coming from the worker take the form `[id, status, result]`:
          *    id     - counter-based unique ID for the RPC call
@@ -55,95 +59,92 @@ export default function fibrelite(asyncFunction, maxThreads) {
          */
 
         worker.onmessage = e => {
+
             // invoke the promise's resolve() or reject() depending on whether there was an error.
-            promises[e.data[0]][e.data[1]](e.data[2]);
+            promises[e.data[0]][e.data[1]](e.data[2])
 
             // ... then delete the promise controller
             promises[e.data[0]] = null;
 
-            // We don't have to terminate workers that are finished
-            worker.resolved = true;
         };
 
         // Return a proxy function that forwards calls to the worker & returns a promise for the result.
-        return {
-            id : this.id++,
+        const thread = {
+            resolved: false,
             worker: worker,
             fn : function(args) {
                 args = [].slice.call(arguments);
+
                 return new Promise(function() {
+                    thread.resolved = false;
                     // Add the promise controller to the registry
                     promises[++currentId] = arguments;
 
                     // Send an RPC call to the worker - call(id, params)
-                    worker.resolved = false;
                     worker.postMessage([currentId, args]);
-                });
+                }).then((result) => {
+                    thread.resolved = true;
+                    return result;
+                })
             }
         };
+        return thread;
 
     }
 
-    this.roundRobin = 0;
+    this.waitExecute = async (value) => {
+
+        if (this.totalThreads === 1) {
+            if (
+                pool.length && 
+                pool[0].resolved === false &&
+                this.lastKnownValue !== undefined
+            ) {
+                // If the oldest thread hasn't resolved
+                // just give back the last known value
+                return this.lastKnownValue;
+            }
+
+            if (!pool.length) pool[0] = getThread(asyncFunction);
+    
+            this.lastKnownValue = pool[0].fn(value);
+            return this.lastKnownValue;
+
+        } else {
+            throw Error("waitExecute requires only use of one worker");
+        }
+
+    }
 
     this.prioritiseExecute = async (value) => {
-        
-        this.roundRobin++;
 
-        if (this.roundRobin >= maxThreads - 1) {
-            this.roundRobin = 0;
+        if (pool.length > 0) {
+            if (pool[this.totalThreads - 1].resolved === false) {
+                // Remove the worker from the pool
+                // and terminate it
+                pool.pop().worker.terminate();
+            }
         }
-
-        while (pool.length < maxThreads) {
-            pool.unshift(greenlet(asyncFunction));
-        }
-
-        const oldestThread = pool.pop();
-        new Promise((resolve) => {
-            resolve(oldestThread.worker.terminate()); 
-        });
         
-        return pool[this.roundRobin].fn(value);
+        return this.execute(value);
         
     }
 
-    // this.prioritiseExecute = async (value) => {
-    //     roundRobin++;
-    //     if (roundRobin === maxThread - 1) {
-    //         roundRobin = 0;
-    //     }
-    //     if (pool.length === 0) {
-    //         const currentThread = greenlet(asyncFunction)
-    //         pool.push(currentThread);
-    //         return currentThread.fn(value);
-    //     }
+    this.execute = async (value) => {
 
-    //     if (pool.length === maxThreads) {
-    //         console.log("last thread", pool[maxThreads - 1]);
-    //         if (pool[maxThreads - 1].worker.resolved === false) {
-    //             const oldestThread = pool.pop();
-    //             new Promise((resolve) => {
-    //                 resolve(oldestThread.worker.terminate()); 
-    //             });
-    //         }
-    //     }
+        while (pool.length < this.totalThreads) {
+            pool.unshift(getThread(asyncFunction));
+        }
 
-    //     console.log("pool", pool);
-    //     if (pool.length < maxThreads) {
-    //         pool.unshift(greenlet(asyncFunction));
-    //     }
-        
-    //     return pool[0].fn(value);
-        
-    // }
+        const thread = pool[this.roundRobin].fn(value);
+        if (this.roundRobin >= this.totalThreads - 1) {
 
-    // this.execute = async (value) => {
-    //     if (currentThread === undefined) {
-    //         currentThread = greenlet(asyncFunction)
-    //         return currentThread.fn(value);
-    //     }
-    //     return currentThread.fn(value);
-    // }
+        } else {
+            this.roundRobin++;
+        }
+        return thread;
+
+    }
 
     this.getCurrentWorker = () => {
         return currentThread.worker;
