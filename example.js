@@ -107,7 +107,7 @@ const setupStats = () => {
     stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
     stats.domElement.style.position = "fixed";
     stats.domElement.style.top = "0";
-    stats.domElement.style.right = "0";
+    stats.domElement.style.left = "0";
     stats.domElement.style.width = 80 * 2;
     stats.domElement.style.height = 48 * 2;
     for (var i = 0; i <  stats.domElement.children.length; i++) {
