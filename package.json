@@ -1,6 +1,6 @@
 {
   "name": "fibrelite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "source": "fibrelite.js",
   "main": "dist/fibrelite.js",
   "module": "dist/fibrelite.m.js",
