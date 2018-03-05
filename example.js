@@ -134,3 +134,8 @@ const setupStats = () => {
 };
  
 setupStats();
+
+
+document.getElementById("refresh").addEventListener("click", () => {
+    location.reload();
+});
