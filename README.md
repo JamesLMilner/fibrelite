@@ -12,6 +12,20 @@ With fibrelite you can turn any async function into a Web Worker. Fibrelite has 
 
 Check out fibrelite in action [here](https://jamesmilneruk.github.io/fibrelite/).
 
+## Install
+
+For npm:
+
+```
+npm install fibrelite
+```
+
+Or for yarn:
+
+```
+yarn add fibrelite
+```
+
 ## TODO:
 
 * Tests
