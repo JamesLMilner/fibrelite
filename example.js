@@ -61,9 +61,9 @@ const rICExample = () => {
         })
         
         requestAnimationFrame(() => {
-            if (timestamp.getTime() === rICLatest.getTime()) {
-                rICMessage.innerHTML = rICBytes + " bytes in user input"
-            }
+            
+            rICMessage.innerHTML = rICBytes + " bytes in user input"
+
         });
 
     });
@@ -73,24 +73,25 @@ rICExample();
 
 const fibreliteExample = () => {
 
-    const fibril = new fibrelite(dataProcessingAsync);
-    const getStringBytes = fibril.prioritiseExecute; // fibril.prioritiseExecute;
+    const fibril = new fibrelite(dataProcessingAsync, 4, 500);
+    const getStringBytes = fibril.debounceExecute;
+    
+    // You can experiment with the other modes:
+    // const getStringBytes = fibril.execute; 
+    // const getStringBytes = fibril.prioritiseExecute;
+
     const input = document.getElementById("userInput");
     const message = document.getElementById("userMessage");
     let latest;
     let bytes = 0;
 
     input.addEventListener("keyup", async (event) => {
-        
-        
         const timestamp = new Date();
         latest = timestamp;
         bytes = await getStringBytes(event.target.value);
         
         requestAnimationFrame(() => {
-            if (timestamp.getTime() === latest.getTime()) {
-                message.innerHTML = bytes + " bytes in user input"
-            }
+            message.innerHTML = bytes + " bytes in user input"
         });
 
     });
