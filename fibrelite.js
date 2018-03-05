@@ -93,27 +93,23 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
 
     }
 
-    this.nextBatch 
-
     this.debounceExecute = async (value) => {
 
-        //if (this.totalThreads === 1) {
-
         this.latestValue = value;
-
-        if (!pool.length) pool[0] = getThread(asyncFunction);
 
         return new Promise((resolve, reject) => {
             
             // If batch has expired
-            if (!this.nextBatch || Date.now() >= this.nextBatch) {
-                this.nextBatch = Date.now() + this.debounce;
+            if (this.batchEnds === undefined || Date.now() >= this.batchEnds) {
+
+                // This describes the end of the 
+                // current batch of incoming executions
+                this.batchEnds = Date.now() + this.debounce;
+
             } 
 
             // Keep the last value passed to waitExecute
             this.latestValue = value;
-
-            const executeIn = this.nextBatch - (Date.now());
 
             new Promise(() => {
                 setTimeout(() => {
@@ -127,26 +123,20 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
                         });
 
                         resolve(this.lastExecution);
-                    } else {
-                        //console.log("intermediate value, not calling fn");
                     }
 
                     if (this.lastKnownResult !== undefined) {
-                        //console.log("Resolving lastKnownResult", this.lastKnownResult)
                         resolve(Promise.resolve(this.lastKnownResult));
                     } 
 
                     
                     resolve(this.lastExecution);
 
-                },  executeIn) 
+                },  
+                this.batchEnds - Date.now()) // The time at which to execute
             });
 
         });
-
-        // } else {
-        //     throw Error("waitExecute requires only use of one worker");
-        // }
 
     }
 

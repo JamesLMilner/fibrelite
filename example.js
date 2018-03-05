@@ -73,7 +73,7 @@ rICExample();
 
 const fibreliteExample = () => {
 
-    const fibril = new fibrelite(dataProcessingAsync, 4, 333);
+    const fibril = new fibrelite(dataProcessingAsync, 4, 500);
     const getStringBytes = fibril.debounceExecute;
     
     // You can experiment with the other modes:

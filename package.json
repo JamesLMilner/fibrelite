@@ -1,7 +1,6 @@
 {
   "name": "fibrelite",
   "version": "1.0.0",
-  "description": "",
   "source": "fibrelite.js",
   "main": "dist/fibrelite.js",
   "module": "dist/fibrelite.m.js",
@@ -20,5 +19,15 @@
     "microbundle": "^0.4.3"
   },
   "author": "James Milner",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JamesMilnerUK/fibrelite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JamesMilnerUK/fibrelite/issues"
+  },
+  "homepage": "https://github.com/JamesMilnerUK/fibrelite#readme",
+  "description": ""
 }
