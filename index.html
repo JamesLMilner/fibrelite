@@ -43,7 +43,9 @@
             <h1> Fibrelite Example </h1>
 
             <section class="example">
-                <h2>Synchronous (Warning: Janky!)</h3> 
+                <h2>Synchronous </h2>
+
+                <h4> Runs expensive code in the main thread. Warning: Janky!</h4>
                 <input id="syncUserInput"></input>
                 <br><br>
                 <div>
@@ -54,7 +56,8 @@
             </section>
 
             <section class="example">
-                <h2>requestIdleCallback</h3> 
+                <h2>requestIdleCallback</h2> 
+                <h4> Runs expensive code during browser's idle periods to avoid jank </h4>
                 <input id="rICUserInput"></input>
                 <br><br>
                 <div>
@@ -65,9 +68,13 @@
             </section>
  
             <section class="example">
-                <h2>Fibrelite</h3> 
+                <h2>Fibrelite</h2> 
+                <h4> 
+                    Runs expensive code in a Web Worker off the main thread. <br> 
+                    Please refresh the page to clear off remaining requestIdleCallbacks.
+                </h4>
                 <button id="refresh"> 
-                    Refresh the page to clear off remaining requestIdleCallbacks 
+                    Refresh
                 </button>
                 <br><br>
                 <input id="userInput"></input>
