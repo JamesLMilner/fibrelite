@@ -1,8 +1,9 @@
-export default function fibrelite(asyncFunction, totalThreads) {
+export default function fibrelite(asyncFunction, totalThreads, debounce) {
 
     const pool = [];
     this.roundRobin = 0;
     this.totalThreads = totalThreads || 1;
+    this.debounce = debounce || 333;
 
     // More than 20 web workers will crash most browsers
     if (this.totalThreads > 20) {
@@ -92,27 +93,60 @@ export default function fibrelite(asyncFunction, totalThreads) {
 
     }
 
-    this.waitExecute = async (value) => {
+    this.nextBatch 
 
-        if (this.totalThreads === 1) {
-            if (
-                pool.length && 
-                pool[0].resolved === false &&
-                this.lastKnownValue !== undefined
-            ) {
-                // If the oldest thread hasn't resolved
-                // just give back the last known value
-                return this.lastKnownValue;
-            }
+    this.debounceExecute = async (value) => {
 
-            if (!pool.length) pool[0] = getThread(asyncFunction);
-    
-            this.lastKnownValue = pool[0].fn(value);
-            return this.lastKnownValue;
+        //if (this.totalThreads === 1) {
 
-        } else {
-            throw Error("waitExecute requires only use of one worker");
-        }
+        this.latestValue = value;
+
+        if (!pool.length) pool[0] = getThread(asyncFunction);
+
+        return new Promise((resolve, reject) => {
+            
+            // If batch has expired
+            if (!this.nextBatch || Date.now() >= this.nextBatch) {
+                this.nextBatch = Date.now() + this.debounce;
+            } 
+
+            // Keep the last value passed to waitExecute
+            this.latestValue = value;
+
+            const executeIn = this.nextBatch - (Date.now());
+
+            new Promise(() => {
+                setTimeout(() => {
+
+                    if (this.latestValue === value || this.lastExecution === undefined) {
+                        //console.log("latestValue - calling fn", this.latestValue);
+                        this.lastExecution = this.execute(value).then((result) => {
+                            //console.log(result);
+                            this.lastKnownResult = result;
+                            return result;
+                        });
+
+                        resolve(this.lastExecution);
+                    } else {
+                        //console.log("intermediate value, not calling fn");
+                    }
+
+                    if (this.lastKnownResult !== undefined) {
+                        //console.log("Resolving lastKnownResult", this.lastKnownResult)
+                        resolve(Promise.resolve(this.lastKnownResult));
+                    } 
+
+                    
+                    resolve(this.lastExecution);
+
+                },  executeIn) 
+            });
+
+        });
+
+        // } else {
+        //     throw Error("waitExecute requires only use of one worker");
+        // }
 
     }
 

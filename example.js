@@ -73,16 +73,19 @@ rICExample();
 
 const fibreliteExample = () => {
 
-    const fibril = new fibrelite(dataProcessingAsync);
-    const getStringBytes = fibril.waitExecute; // fibril.prioritiseExecute;
+    const fibril = new fibrelite(dataProcessingAsync, 4, 333);
+    const getStringBytes = fibril.debounceExecute;
+    
+    // You can experiment with the other modes:
+    // const getStringBytes = fibril.execute; 
+    // const getStringBytes = fibril.prioritiseExecute;
+
     const input = document.getElementById("userInput");
     const message = document.getElementById("userMessage");
     let latest;
     let bytes = 0;
 
     input.addEventListener("keyup", async (event) => {
-        
-        
         const timestamp = new Date();
         latest = timestamp;
         bytes = await getStringBytes(event.target.value);
