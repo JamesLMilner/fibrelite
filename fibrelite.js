@@ -167,7 +167,7 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
 
         const thread = pool[this.roundRobin].fn(value);
         if (this.roundRobin >= this.totalThreads - 1) {
-
+            this.roundRobin = 0;
         } else {
             this.roundRobin++;
         }
