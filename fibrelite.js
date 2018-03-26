@@ -147,14 +147,7 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
 
     this.prioritiseExecute = async (value) => {
 
-        if (pool.length > 0) {
-            if (pool[this.totalThreads - 1].resolved === false) {
-                // Remove the worker from the pool
-                // and terminate it
-                pool.pop().worker.terminate();
-            }
-        }
-        
+        this.terminateAll();
         return this.execute(value);
         
     }
@@ -177,6 +170,18 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
 
     this.getCurrentWorker = () => {
         return currentThread.worker;
+    }
+
+    this.terminateAll = () => {
+
+        if (pool.length > 0) {
+            if (pool[this.totalThreads - 1].resolved === false) {
+                // Remove the worker from the pool
+                // and terminate it
+                pool.pop().worker.terminate();
+            }
+        }
+
     }
 
 }
