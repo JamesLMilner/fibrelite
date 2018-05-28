@@ -18,39 +18,36 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
      *  @public
      */
     const getThread = (asyncFunction) => {
+        // A simple counter is used to generate worker-global unique ID's for RPC:
+        let currentId = 0;
 
-        if (!this.cachedObjectUrl) {
-
-            // The URL is a pointer to a stringified function (as a blob object)
-            this.cachedObjectUrl = URL.createObjectURL(new Blob([
-                // Register our wrapper function as the message handler
-                'onmessage=(' + (
-                    // userFunc() is the user-supplied async function
-                    userFunc => e => {
-                        // Invoking within then() captures exceptions in userFunc() as rejections
-                        Promise.resolve(e.data[1]).then(
-                            userFunc.apply.bind(userFunc, userFunc)
-                        ).then(
-                            // success handler - callback(id, SUCCESS(0), result)
-                            d => { postMessage([e.data[0], 0, d]);},
-                            // error handler - callback(id, ERROR(1), error)
-                            e => { postMessage([e.data[0], 1, ''+e]); }
-                        );
-                    }
-                ) + ')(' + asyncFunction + ')'  // pass user-supplied function to the closure
-            ]))
-            
-        }
+        // Outward-facing promises store their "controllers" (`[request, reject]`) here:
+        const promises = {};
 
         // Create an "inline" worker (1:1 at definition time)
-        let worker = new Worker(this.cachedObjectUrl),
+        const worker = new Worker(
+            // Use a data URI for the worker's src. It inlines the target function and an RPC handler:
+            'data:,$$='+asyncFunction+';onmessage='+(e => {
+                /* global $$ */
 
-            // A simple counter is used to generate worker-global unique ID's for RPC:
-            currentId = 0,
-
-            // Outward-facing promises store their "controllers" (`[request, reject]`) here:
-            promises = {};
-
+                // Invoking within then() captures exceptions in the supplied async function as rejections
+                Promise.resolve(e.data[1]).then(
+                    v => $$.apply($$, v)
+                ).then(
+                    // success handler - callback(id, SUCCESS(0), result)
+                    // if `d` is transferable transfer zero-copy
+                    d => {
+                        postMessage([e.data[0], 0, d], [d].filter(x => (
+                            (x instanceof ArrayBuffer) ||
+                            (x instanceof MessagePort) ||
+                            (x instanceof ImageBitmap)
+                        )));
+                    },
+                    // error handler - callback(id, ERROR(1), error)
+                    er => { postMessage([e.data[0], 1, '' + er]); }
+                );
+            })
+        );
 
         /** Handle RPC results/errors coming back out of the worker.
          *  Messages coming from the worker take the form `[id, status, result]`:
@@ -58,37 +55,34 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
          *    status - 0 for success, 1 for failure
          *    result - the result or error, depending on `status`
          */
-
         worker.onmessage = e => {
-
             // invoke the promise's resolve() or reject() depending on whether there was an error.
-            promises[e.data[0]][e.data[1]](e.data[2])
+            promises[e.data[0]][e.data[1]](e.data[2]);
 
             // ... then delete the promise controller
             promises[e.data[0]] = null;
-
         };
 
-        // Return a proxy function that forwards calls to the worker & returns a promise for the result.
         const thread = {
             resolved: false,
             worker: worker,
             fn : function(args) {
                 args = [].slice.call(arguments);
-
-                return new Promise(function() {
-                    thread.resolved = false;
+                return new Promise(function () {
                     // Add the promise controller to the registry
                     promises[++currentId] = arguments;
 
                     // Send an RPC call to the worker - call(id, params)
-                    worker.postMessage([currentId, args]);
-                }).then((result) => {
-                    thread.resolved = true;
-                    return result;
-                })
+                    // The filter is to provide a list of transferables to send zero-copy
+                    worker.postMessage([currentId, args], args.filter(x => (
+                        (x instanceof ArrayBuffer) ||
+                        (x instanceof MessagePort) ||
+                        (x instanceof ImageBitmap)
+                    )));
+                });
             }
         };
+
         return thread;
 
     }

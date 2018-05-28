@@ -5,7 +5,9 @@
   "main": "dist/fibrelite.js",
   "module": "dist/fibrelite.m.js",
   "scripts": {
-    "build": "microbundle"
+    "build": "microbundle",
+    "watch": "microbundle watch --format umd",
+    "serve": "live-server"
   },
   "eslintConfig": {
     "extends": "eslint-config-developit",
@@ -16,6 +18,7 @@
   },
   "devDependencies": {
     "eslint": "^4.16.0",
+    "live-server": "^1.2.0",
     "microbundle": "^0.4.3"
   },
   "author": "James Milner",
