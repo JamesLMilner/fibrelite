@@ -1,15 +1,20 @@
+
+// Keep track of rICs for clearing off
+const rICs = [];
+let fibreliteSetting = "execute";
+
+// Returns the byte length of an utf8 inputing 
+// and includes a synthetic wait
 const dataProcessingAsync = async (input) => {
 
-    // returns the byte length of an utf8 inputing
     const s = input.length;
     for (let i=input.length-1; i>=0; i--) {
         const code = input.charCodeAt(i);
         if (code > 0x7f && code <= 0x7ff) s++;
         else if (code > 0x7ff && code <= 0xffff) s+=2;
-        if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+        if (code >= 0xDC00 && code <= 0xDFFF) i--;
     }
-
-    // Synthetic wait
+   
     const ms = 333;
     const start = Date.now();
     let now = start;
@@ -46,6 +51,7 @@ const syncExample = () => {
 syncExample();
 
 const rICExample = () => {
+
     const rICInput = document.getElementById("rICUserInput");
     const rICMessage = document.getElementById("rICUserMessage");
     let rICLatest;
@@ -56,9 +62,9 @@ const rICExample = () => {
         const timestamp = new Date();
         rICLatest = timestamp;
         
-        requestIdleCallback(async () => {
+        rICs.push(requestIdleCallback(async () => {
             rICBytes = await dataProcessingAsync(event.target.value);
-        })
+        }));
         
         requestAnimationFrame(() => {
             
@@ -73,19 +79,15 @@ rICExample();
 
 const fibreliteExample = () => {
 
-    const fibril = new fibrelite(dataProcessingAsync, 4, 500);
-    const getStringBytes = fibril.debounceExecute;
-    
-    // You can experiment with the other modes:
-    // const getStringBytes = fibril.execute; 
-    // const getStringBytes = fibril.prioritiseExecute;
-
+    const worker = new fibrelite(dataProcessingAsync, 4, 500);
     const input = document.getElementById("userInput");
     const message = document.getElementById("userMessage");
     let latest;
     let bytes = 0;
 
     input.addEventListener("keyup", async (event) => {
+        const getStringBytes = worker[fibreliteSetting];
+        console.log(fibreliteSetting, getStringBytes);
         const timestamp = new Date();
         latest = timestamp;
         bytes = await getStringBytes(event.target.value);
@@ -135,7 +137,14 @@ const setupStats = () => {
  
 setupStats();
 
+document.getElementById("options").addEventListener("change", (event) => {
+    console.log(event);
+    fibreliteSetting = event.target.value;
+});
 
-document.getElementById("refresh").addEventListener("click", () => {
-    location.reload();
+
+document.getElementById("cancel").addEventListener("click", () => {
+    rICs.forEach((rICid) => {
+        window.cancelIdleCallback(rICid);
+    })
 });

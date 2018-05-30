@@ -7,6 +7,7 @@
   "scripts": {
     "build": "microbundle",
     "watch": "microbundle watch --format umd",
+    "test": "karmatic",
     "serve": "live-server"
   },
   "eslintConfig": {
@@ -19,7 +20,8 @@
   "devDependencies": {
     "eslint": "^4.16.0",
     "live-server": "^1.2.0",
-    "microbundle": "^0.4.3"
+    "microbundle": "^0.4.3",
+    "karmatic": "^1.0.6"
   },
   "author": "James Milner",
   "license": "MIT",

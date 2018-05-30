@@ -4,6 +4,8 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
     this.roundRobin = 0;
     this.totalThreads = totalThreads || 1;
     this.debounce = debounce || 333;
+    this.debounceId = 0; // Keep track of debounce calls
+    this.firstPrioritiseCall = true; // Prevent unecessary termination
 
     // More than 20 web workers will crash most browsers
     if (this.totalThreads > 20) {
@@ -49,26 +51,13 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
             })
         );
 
-        /** Handle RPC results/errors coming back out of the worker.
-         *  Messages coming from the worker take the form `[id, status, result]`:
-         *    id     - counter-based unique ID for the RPC call
-         *    status - 0 for success, 1 for failure
-         *    result - the result or error, depending on `status`
-         */
-        worker.onmessage = e => {
-            // invoke the promise's resolve() or reject() depending on whether there was an error.
-            promises[e.data[0]][e.data[1]](e.data[2]);
-
-            // ... then delete the promise controller
-            promises[e.data[0]] = null;
-        };
-
         const thread = {
             resolved: false,
             worker: worker,
-            fn : function(args) {
-                args = [].slice.call(arguments);
+            fn : function() {
+                const args = [].slice.call(arguments);
                 return new Promise(function () {
+
                     // Add the promise controller to the registry
                     promises[++currentId] = arguments;
 
@@ -83,97 +72,136 @@ export default function fibrelite(asyncFunction, totalThreads, debounce) {
             }
         };
 
+        /** Handle RPC results/errors coming back out of the worker.
+         *  Messages coming from the worker take the form `[id, status, result]`:
+         *    id     - counter-based unique ID for the RPC call
+         *    status - 0 for success, 1 for failure
+         *    result - the result or error, depending on `status`
+         */
+        worker.onmessage = e => {
+            // Set the current thread as resolved;
+            thread.resolved = true;
+            // invoke the promise's resolve() or reject() depending on whether there was an error.
+            promises[e.data[0]][e.data[1]](e.data[2]);
+
+            // ... then delete the promise controller
+            promises[e.data[0]] = null;
+        };
+
+        // Return the thread to the developer
         return thread;
 
     }
 
-    this.debounceExecute = async (value) => {
+    /** 
+     * Debounce a series of calls to a Web Worker async function
+     * catching the last call in a given batched time frame
+     */
+    this.debounce = async function() {
 
-        this.latestValue = value;
+        const args = [].slice.call(arguments);
+
+        // If batch has expired
+        if (this.batchEnds === undefined || Date.now() >= this.batchEnds) {
+
+            // This describes the end of the 
+            // current batch of incoming executions
+            this.batchEnds = Date.now() + this.debounce;
+
+        } 
+
+        // Keep the last arguments on record
+        this.finalArgsInBatch = args;
 
         return new Promise((resolve, reject) => {
-            
-            // If batch has expired
-            if (this.batchEnds === undefined || Date.now() >= this.batchEnds) {
+            setTimeout(() => {
 
-                // This describes the end of the 
-                // current batch of incoming executions
-                this.batchEnds = Date.now() + this.debounce;
+                if (this.finalArgsInBatch === args || this.lastExecution === undefined) {
 
-            } 
+                    this.lastExecution = this.execute.apply(this, this.finalArgsInBatch).then((result) => {
+                        // When we have a known result set it to
+                        // the resolved value
+                        this.lastKnownResult = result;
+                        return result;
+                    });
 
-            // Keep the last value passed to waitExecute
-            this.latestValue = value;
-
-            new Promise(() => {
-                setTimeout(() => {
-
-                    if (this.latestValue === value || this.lastExecution === undefined) {
-
-                        this.lastExecution = this.execute(value).then((result) => {
-                            // When we have a known result set it to
-                            // the resolved value
-                            this.lastKnownResult = result;
-                            return result;
-                        });
-
-                        // Resolve the new latest value function
-                        resolve(this.lastExecution);
-
-                    }
-
-                    // If we have an intermittent known result, resolve that
-                    if (this.lastKnownResult !== undefined) {
-                        resolve(Promise.resolve(this.lastKnownResult));
-                    } 
-
-                    // Else lets just resolve to the currently executing
-                    // function
+                    // Resolve the new latest value function
                     resolve(this.lastExecution);
 
-                },  
-                this.batchEnds - Date.now()) // The time at which to execute
-            });
+                }
+                
+                // If we have an intermittent known result, resolve that
+                if (this.lastKnownResult !== undefined) {
+                    resolve(this.lastKnownResult);
+                } 
+
+                // Else lets just resolve to the currently executing
+                // function
+                resolve(this.lastExecution);
+
+            },  
+            this.batchEnds - Date.now()) // The time at which to execute
 
         });
 
-    }
+    }.bind(this);
 
-    this.prioritiseExecute = async (value) => {
+    /** 
+     * Kill off workers that were previously processing a request
+     * in turn prioritising the latest call
+     */
+    this.prioritise =  async function() {
+        if (!this.firstPrioritiseCall) {
+            this.terminateAll();
+        }  
+        this.firstPrioritiseCall = false;
+        return this.execute.apply(this, [].slice.call(arguments));
+    }.bind(this);
+    
+    /** 
+     * Execute the function passed to fibrelite. This is the
+     * standard method to use.
+     */
+    this.execute = async function() {
 
-        this.terminateAll();
-        return this.execute(value);
-        
-    }
+        const args = [].slice.call(arguments);
 
-    this.execute = async (value) => {
-
+        // Fill the thread pool
         while (pool.length < this.totalThreads) {
             pool.unshift(getThread(asyncFunction));
         }
 
-        const thread = pool[this.roundRobin].fn(value);
+        // Get the next thread
+        const thread = pool[this.roundRobin].fn.apply(null, args);
+
+        // Increment the thread counter
         if (this.roundRobin >= this.totalThreads - 1) {
             this.roundRobin = 0;
         } else {
             this.roundRobin++;
         }
+
         return thread;
 
+    }.bind(this);
+
+    /** 
+     * Get the pool of workers that fibrelite is currently using
+     */
+    this.getWorkers = () => {
+        return pool.concat(); // return a copy of the array
     }
 
-    this.getCurrentWorker = () => {
-        return currentThread.worker;
-    }
-
+    /** 
+     * Kill all the currently executing workers
+     */
     this.terminateAll = () => {
 
-        if (pool.length > 0) {
-            if (pool[this.totalThreads - 1].resolved === false) {
-                // Remove the worker from the pool
-                // and terminate it
-                pool.pop().worker.terminate();
-            }
+        if (pool.length > 0 && pool[this.totalThreads - 1].resolved === false) {
+
+            // Remove the worker from the pool
+            // and terminate it
+            pool.pop().worker.terminate();
         }
 
     }

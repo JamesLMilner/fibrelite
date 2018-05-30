@@ -71,11 +71,18 @@
                 <h2>Fibrelite</h2> 
                 <h4> 
                     Runs expensive code in a Web Worker off the main thread. <br> 
-                    Please refresh the page to clear off remaining requestIdleCallbacks.
+                    Please click to clear off remaining requestIdleCallbacks from above.
                 </h4>
-                <button id="refresh"> 
-                    Refresh
-                </button>
+                <div>
+                    <button id="cancel"> 
+                        Cancel rICs
+                    </button>
+                    <select id="options"> 
+                        <option value="execute">Execute</option>
+                        <option value="prioritise">Prioritise</option>
+                        <option value="debounce">Debounce</option>
+                    </select>
+                </div>
                 <br><br>
                 <input id="userInput"></input>
                 <br><br>
