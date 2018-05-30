@@ -5,7 +5,7 @@ Seamlessly use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/We
 With fibrelite you can turn any async function into a Web Worker. Fibrelite has three core approaches to handling work:
 
 * Execute: Execute an async function as a Web Worker
-* Debounce: Only run the an async function on last value in a batch of incoming operations 
+* Debounce: Only run the an async function on last set of arguments in a batch of incoming operations 
 * Prioritise: Run all incoming operations but kill off workers as new operations come in
 
 ## Example
@@ -25,12 +25,6 @@ Or for yarn:
 ```
 yarn add fibrelite
 ```
-
-## TODO:
-
-* Tests
-* More use cases / examples
-* Performance review
 
 ## Acknowledgements
 
