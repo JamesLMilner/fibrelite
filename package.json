@@ -1,6 +1,6 @@
 {
   "name": "fibrelite",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "source": "fibrelite.js",
   "main": "dist/fibrelite.js",
   "module": "dist/fibrelite.m.js",
@@ -11,10 +11,14 @@
     "serve": "live-server"
   },
   "eslintConfig": {
-    "extends": "eslint-config-developit",
-    "rules": {
-      "prefer-spread": 0,
-      "prefer-rest-params": 0
+    "extends": "eslint:recommended",
+    "parserOptions" : {
+      "sourceType" : "module",
+      "ecmaVersion" : 8
+    },
+    "env" : {
+      "es6" : "true",
+      "browser" : "true"
     }
   },
   "devDependencies": {
