@@ -12,10 +12,17 @@ describe('fibrelite', () => {
 		expect(worker).toEqual(jasmine.any(Object));
     });
     
-    it('should return the current worker when called', () => {
+    it('should return the current workers when called', () => {
         let worker = new fibrelite( () => 'one' );
         expect(worker.getWorkers).toEqual(jasmine.any(Function));
 		expect(worker.getWorkers()).toEqual(jasmine.any(Array));
+	});
+
+	it('should allow for the termination of all workers', () => {
+        let worker = new fibrelite( () => 'one' );
+        expect(worker.terminateAll).toEqual(jasmine.any(Function));
+		worker.terminateAll();
+		expect(worker.getWorkers().length).toEqual(0);
 	});
 
 	it('should execute function when called', async () => {
@@ -33,7 +40,6 @@ describe('fibrelite', () => {
 		let ret = await worker.execute('test', 'ing');
 		expect(ret).toEqual('foo: testing');
     });
-
 
 	it('should give different results for executing on different inputs', async () => {
         let worker = new fibrelite( a => 'foo: '+a );
@@ -53,12 +59,12 @@ describe('fibrelite', () => {
 	
 	it('when prioritised is called it should not kill workers that have resolved (they can be reused!)', async () => {
 		let worker = new fibrelite( a => 'foo: '+a, 1);
-		let ret = await worker.prioritise('test');
+		await worker.prioritise('test');
 		let workers = worker.getWorkers();
 
 		expect(workers).toBeDefined();
 		expect(workers.length).toEqual(1);
-		ret = await worker.prioritise('test');
+		await worker.prioritise('test');
 		let nextWorkers = worker.getWorkers();
 		expect(nextWorkers).toBeDefined();
 		expect(nextWorkers.length).toEqual(1);
@@ -67,8 +73,8 @@ describe('fibrelite', () => {
 	
 	it('when prioritised is called it should kill workers that have not resolved', async () => {
 		let worker = new fibrelite( a => { 
-			return new Promise((res, rej) => {
-				setTimeout(() => { res() }, 100);
+			return new Promise((res) => {
+				setTimeout(() => { res(a) }, 100);
 			})
 		}, 1);
 

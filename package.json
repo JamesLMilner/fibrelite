@@ -12,6 +12,12 @@
   },
   "eslintConfig": {
     "extends": "eslint:recommended",
+    "globals" : {
+      "it" : true,
+      "describe" : true,
+      "expect" : true,
+      "jasmine" : true
+    },
     "parserOptions" : {
       "sourceType" : "module",
       "ecmaVersion" : 8
