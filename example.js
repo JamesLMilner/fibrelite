@@ -144,7 +144,8 @@ document.getElementById("options").addEventListener("change", (event) => {
 
 
 document.getElementById("cancel").addEventListener("click", () => {
-    rICs.forEach((rICid) => {
-        window.cancelIdleCallback(rICid);
-    })
+    for (let i = 0; i < rICs.length; i++) {
+        const id = rICs.pop();
+        window.cancelIdleCallback(id);
+    }
 });
