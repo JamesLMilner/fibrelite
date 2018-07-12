@@ -134,6 +134,7 @@ const setupStats = () => {
 		frameTime += (thisFrameTime - frameTime) / filterStrength;
 		lastLoop = thisLoop;
 		const fpsVal = 1000/frameTime;
+
 		switch(true){
 			case fpsVal < 20:
 				fps.style.background = "#ff6961";
@@ -145,7 +146,8 @@ const setupStats = () => {
 				fps.style.background = "#77dd77";
 		}
 		if (frameNumber % 2 === 0) {
-			fps.innerHTML = (1000/frameTime).toFixed(0) + " FPS";
+			const cappedFps = (fpsVal > 60 ? 60 : fpsVal ).toFixed(0);
+			fps.innerHTML = cappedFps + " FPS";
 		}
 		frameNumber++;
 		requestAnimationFrame(fpsLoop);
