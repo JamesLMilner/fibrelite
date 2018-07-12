@@ -1,11 +1,11 @@
 # Fibrelite
 
-Seamlessly use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to offload work that could block user interaction and page rendering. 
+Seamlessly use [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) to offload work that could block user interaction and page rendering.
 
 With Fibrelite you can turn any async function into a Web Worker. Fibrelite has three core strategies to executing work:
 
 * **Execute**: run an async function as a Web Worker
-* **Debounce**: Only run the an async function on last set of arguments in a batch of incoming operations 
+* **Debounce**: Only run the an async function on last set of arguments in a batch of incoming operations
 * **Prioritise**: Run all incoming operations but kill off workers as new operations come in
 
 ## Demo
@@ -34,7 +34,7 @@ yarn add fibrelite
 Alternatively you can use the unpkg [CDN](https://www.cloudflare.com/learning/cdn/what-is-a-cdn/) like so:
 
 ```html
-<script src="https://unpkg.com/fibrelite@2.0.0/dist/fibrelite.js"></script>
+<script src="https://unpkg.com/fibrelite@2.0.1/dist/fibrelite.js"></script>
 ```
 
 #### Using Fibrelite
@@ -50,7 +50,7 @@ Changing numberOfWorkersInPool will make use of a pool of workers in for running
 You can use Fibrelite like this:
 
 ```javascript
-(async() => { 
+(async() => {
 
     const asyncHello = async (input) => {
         return "Hello " + input;
@@ -68,7 +68,7 @@ You can use Fibrelite like this:
 
 To build Fibrelite you can run:
 
-``` 
+```
 npm run build
 ```
 
