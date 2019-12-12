@@ -10,7 +10,7 @@ With Fibrelite you can turn any async function into a Web Worker. Fibrelite has 
 
 ## Demo
 
-Check out Fibrelite in action [here](https://jamesmilneruk.github.io/fibrelite/). This is a hosted version of the `index.html` and `example.js` inside this repository.
+Check out Fibrelite in action [here](https://jameslmilner.github.io/fibrelite/). This is a hosted version of the `index.html` and `example.js` inside this repository.
 
 ## Usage
 
