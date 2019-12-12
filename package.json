@@ -38,11 +38,11 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JamesMilnerUK/fibrelite.git"
+    "url": "git+https://github.com/jameslmilner/fibrelite.git"
   },
   "bugs": {
-    "url": "https://github.com/JamesMilnerUK/fibrelite/issues"
+    "url": "https://github.com/jameslmilner/fibrelite/issues"
   },
-  "homepage": "https://github.com/JamesMilnerUK/fibrelite#readme",
+  "homepage": "https://github.com/jameslmilner/fibrelite#readme",
   "description": ""
 }
