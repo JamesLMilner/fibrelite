@@ -30,7 +30,7 @@
   "devDependencies": {
     "eslint": "^5.0.1",
     "live-server": "^1.2.0",
-    "microbundle": "^0.5.1",
+    "microbundle": "^0.15.1",
     "karmatic": "^1.2.0"
   },
   "author": "James Milner",
